@@ -1,11 +1,54 @@
-use std::io;
+
 
 use std::mem;
 use std::slice;
 use std;
 use std::fs::File;
 use std::io::Write;
+use std::io;
 
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::io::Read;
+use std::string::String;
+fn Model()-> std::io::Result<(Vec<Vec<u32>>,Vec<Vec<usize>>)>{
+    let mut vects = Vec::new();
+    let mut faces = Vec::new();
+    
+    
+    
+    let file = std::fs::OpenOptions::new().read(true).open("C:\\Users\\Administrator\\Documents\\Rust_Projects\\Bres\\target\\debug\\african_head.obj").unwrap();
+    
+    let reader = BufReader::new(file);
+
+    for lineResult in reader.lines() {
+        let lineStr = lineResult.unwrap();
+        
+        let mut dataStr = lineStr.split_whitespace();
+        dataStr.next();
+        if(lineStr.starts_with("v"))
+        {
+            let mut vec = Vec::new();
+
+            vec.push(dataStr.next().unwrap().parse::<u32>().unwrap());
+            vec.push(dataStr.next().unwrap().parse::<u32>().unwrap());
+            vec.push(dataStr.next().unwrap().parse::<u32>().unwrap());
+
+            vects.push(vec);
+        }
+        else if(lineStr.starts_with("f"))
+        {
+            let mut vec = Vec::new();
+
+            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
+            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
+            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
+
+            faces.push(vec);
+        }
+    }
+    Ok((vects,faces))
+}
 #[derive(Clone, Copy)]
 struct Color(u8, u8, u8);
 
@@ -98,8 +141,9 @@ fn abs(num : i32) -> i32
 
 
 
-fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine : String, color : Color){
-    logLine(img,x0,y0,x1,y1,numLine);
+
+fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color){
+    //logLine(img,x0,y0,x1,y1,numLine);
     let mut mx0 = x0;
     let mut my0 = y0;
     let mut mx1 = x1;
@@ -117,13 +161,13 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine : Stri
     
     if(delta_X < delta_Y)
     {
-        mx0 = mx0 + mx1;
-        mx1 = mx0 - mx1;
-        mx0 = mx0 - mx1;
+        mx0 = mx0 + my0;
+        my0 = mx0 - my0;
+        mx0 = mx0 - my0;
 
-        my0 = my0 + my1;
-        my1 = my0 - my1;
-        my0 = my0 - my1;
+        my1 = my1 + mx1;
+        mx1 = my1 - mx1;
+        my1 = my1 - mx1;
 
         steep = true;
         
@@ -131,10 +175,11 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine : Stri
     }
     
     //println!("3");
-    let mut error = 0;
-    let deltaerr = delta_Y;
+    let mut error2 = 0;
+    let deltaerr2 = delta_Y * 2;
     let mut y = my0;
     let mut dirY = my1-my0;
+    
 
     //println!("4");
     if dirY > 0{
@@ -150,10 +195,16 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine : Stri
         mx1 = mx0 - mx1;
         mx0 = mx0 - mx1;
     }
-    for x in mx0..mx1{
+    let mut nx = 0;
+    let mut ny = 0;
+    for mut x in mx0..mx1{
+        
 
-       //println!("6");
-        //println!("{}:{}",x,y);
+
+//let  t = (((nx-x0) as f32)/((x1-x0) as f32)) as f32;       
+//let y = (((y0 as f32*(1.-t)) as i32) + ((y1) as f32*t) as i32) as i32;
+        
+        
         //println!("{}:{}"  ,x.to_string(),y.to_string());
         if(steep == false)
         {
@@ -163,12 +214,12 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine : Stri
             plot(img,y,x,color);
         }
 
-        error = error + deltaerr;
+        error2 = error2 + deltaerr2;
 
-        if 2 * error >= delta_X
+        if  error2 >= delta_X
         {
             y = y + dirY;
-            error = error - delta_X;
+            error2 = error2 - 2 *delta_X;
         }
         //println!("7");
 
@@ -185,14 +236,14 @@ fn line_reverseY(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, gap :
 }
 fn line_reverse(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine : String){
      
-    line(img,x1 ,y1,x0 ,y0, numLine , Color(0,0,255));
+    //line(img,x1 ,y1,x0 ,y0, numLine , Color(0,0,255));
 }
 
 fn logLine(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine :String){
     println!("---------------------{} x({}, {}) y({}, {})---------------------", numLine,x0,y0,x1,y1);
 }
 
-fn plot(img : &mut Image, x : i32 , y : i32, color : Color){
+fn plot(img : &mut Image, x : i32 , y : i32, color : Color ){
         //let r = ((x ^ y) % 256) as u8;
         //let g = ((x + y) % 256) as u8;
         //let b = ((y.wrapping_sub(x)) % 256) as u8;
@@ -200,11 +251,12 @@ fn plot(img : &mut Image, x : i32 , y : i32, color : Color){
         let g = 0 as u8;
         let b = 255 as u8;
         //println!("|{}|{}|{}|",r,g,b);
+        
         img.set_pixel(x,y, color);
 }
 
 
-fn LineTest(img : &mut Image, x0 : i32, y0 : i32, gapX : i32 ,gapY : i32,numLine : String)
+fn LineTest(img : &mut Image, x0 : i32, y0 : i32, gapX : i32 ,gapY : i32,numLine : String, color: Color,log : bool)
 {
     
     let xMax = img.width;
@@ -213,7 +265,7 @@ fn LineTest(img : &mut Image, x0 : i32, y0 : i32, gapX : i32 ,gapY : i32,numLine
     let mut x1 = xMax - x0;
     let mut y1 = yMax - y0;
     
-    line(img,x0,y0,x1,y1,numLine, Color(255,0,0));
+    //line(img,x0,y0,x1,y1,numLine, color , log);
     if(x1 + gapX > xMax)
     {
         x1 = xMax - gapX;
@@ -223,8 +275,9 @@ fn LineTest(img : &mut Image, x0 : i32, y0 : i32, gapX : i32 ,gapY : i32,numLine
         y1 = yMax - gapY;
     }
 
-    line(img,x1 + gapX,y1 + gapY,x0 + gapX,y0 + gapY,"reverse".to_string(), Color(0,0,255));
+    //line(img,x1 + gapX,y1 + gapY,x0 + gapX,y0 + gapY,"reverse".to_string(), color , log);
 }
+
 /*
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     for (float t=0.; t<1.; t+=.01) {
@@ -253,19 +306,43 @@ fn main() {
     let mut img : Image = Image::new(xMax + 1, yMax + 1);
     
     
+/*
+    LineTest(&mut img,0         ,yMax               ,gap,0  ,"1".to_string(), Color(0, 255,255),true);
+    LineTest(&mut img,0         ,0                  ,gap,0  ,"2".to_string(), Color(255, 255,255),true);
 
-    LineTest(&mut img,0         ,yMax               ,gap,0  ,"1".to_string());
-    LineTest(&mut img,0         ,0                  ,gap,0  ,"2".to_string());
+    LineTest(&mut img,x025 + gap,yMax               ,0  ,0  ,"3".to_string(), Color(0, 255,0),true);//Lime
+    LineTest(&mut img,x025 + gap,0                  ,0  ,0  ,"4".to_string(), Color(0, 0,255),true);//Red
 
-    LineTest(&mut img,x025 + gap,yMax               ,gap,0  ,"3".to_string());
-    LineTest(&mut img,x025 + gap,0                  ,gap,0  ,"4".to_string());
-
-    LineTest(&mut img,0         ,y05 + y025 - gap   ,0  ,gap,"5".to_string());
-    LineTest(&mut img,0         ,y05 - y025 + gap   ,0  ,gap,"6".to_string());
+    LineTest(&mut img,0         ,y05 + y025 - gap   ,0  ,gap,"5".to_string(), Color(255, 255,0),false);
+    LineTest(&mut img,0         ,y05 - y025 + gap   ,0  ,gap,"6".to_string(), Color(255, 0,0),false);
     
-    LineTest(&mut img,x05       ,yMax               ,gap,0  ,"7".to_string());
-    LineTest(&mut img,0         ,y05                ,0  ,gap,"8".to_string());
+    LineTest(&mut img,x05       ,yMax               ,gap,0  ,"7".to_string(), Color(255, 0,255),false);
+    LineTest(&mut img,0         ,y05                ,0  ,gap,"8".to_string(), Color(0, 128,128),false);
+    */
+
+//line(&mut img, 141,yMax,360,0,"1".to_string(), Color(0, 0,255),true);
+
+    let vects_faces_res = Model();
+    let vects_faces = vects_faces_res.unwrap();
+    let vects = vects_faces.0;
+    let faces = vects_faces.1;
+
+    for i in 0..faces.len()
+    {
+        let face = &faces[i];
+        for j in 0..2
+        {
+            let v0 = &vects[face[j]];
+            let v1 = &vects[face[(j+1)%3]];
+
+            let x0 = ((v0[0] + 1) * (img.width/2) as u32) as i32;
+            let y0 = ((v0[0] + 1) * (img.width/2) as u32) as i32;
+            let x1 = ((v1[0] + 1) * (img.width/2) as u32) as i32;
+            let y1 = ((v1[0] + 1) * (img.width/2) as u32) as i32;
+            line(&mut img,x0,y0,x1,y1,Color(255,255,255))
+        }
+    }
 
 
-    img.write_to_tga("line_15.tga").unwrap();
+    img.write_to_tga("render_1.tga").unwrap();
 }
