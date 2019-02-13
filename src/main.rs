@@ -11,44 +11,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::io::Read;
 use std::string::String;
-fn Model()-> std::io::Result<(Vec<Vec<u32>>,Vec<Vec<usize>>)>{
-    let mut vects = Vec::new();
-    let mut faces = Vec::new();
-    
-    
-    
-    let file = std::fs::OpenOptions::new().read(true).open("C:\\Users\\Administrator\\Documents\\Rust_Projects\\Bres\\target\\debug\\african_head.obj").unwrap();
-    
-    let reader = BufReader::new(file);
-
-    for lineResult in reader.lines() {
-        let lineStr = lineResult.unwrap();
-        
-        let mut dataStr = lineStr.split_whitespace();
-        dataStr.next();
-        if(lineStr.starts_with("v"))
-        {
-            let mut vec = Vec::new();
-
-            vec.push(dataStr.next().unwrap().parse::<u32>().unwrap());
-            vec.push(dataStr.next().unwrap().parse::<u32>().unwrap());
-            vec.push(dataStr.next().unwrap().parse::<u32>().unwrap());
-
-            vects.push(vec);
-        }
-        else if(lineStr.starts_with("f"))
-        {
-            let mut vec = Vec::new();
-
-            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
-            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
-            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
-
-            faces.push(vec);
-        }
-    }
-    Ok((vects,faces))
-}
+use std::error::Error;
 #[derive(Clone, Copy)]
 struct Color(u8, u8, u8);
 
@@ -291,16 +254,7 @@ fn main() {
     let xMax = 511;
     let yMax = 511;
 
-    let xMin = 0;
-    let yMin = 0;
-
-    let x025 = xMax / 4;
-    let y025 = yMax / 4;
-
-    let x05 = xMax / 2;
-    let y05 = yMax / 2;
-
-    let gap = 16;
+    
     
 
     let mut img : Image = Image::new(xMax + 1, yMax + 1);
@@ -322,7 +276,8 @@ fn main() {
 
 //line(&mut img, 141,yMax,360,0,"1".to_string(), Color(0, 0,255),true);
 
-    let vects_faces_res = Model();
+    let vects_faces_res = model_create();
+    /*
     let vects_faces = vects_faces_res.unwrap();
     let vects = vects_faces.0;
     let faces = vects_faces.1;
@@ -345,4 +300,54 @@ fn main() {
 
 
     img.write_to_tga("render_1.tga").unwrap();
+    */
+}
+fn model_create(){
+    //let mut vects = Vec::new();
+    //let mut faces = Vec::new();
+    
+    let path = std::path::Path::new("C:\\Users\\Administrator\\Documents\\Rust_Projects\\Bres\\target\\debug\\african_head.obj");
+    let display = path.display();
+    println!("Haha");
+    let  file = match File::open(&path){
+        Err(why) => panic!("couldn't open {}: {}", display,
+                                                   why.description()),
+        Ok(file) => file
+    };
+    
+    let reader = BufReader::new(file);
+
+    for lineResult in reader.lines() {
+        /*
+        let work_line = lineResult;
+        let mut dataStr = work_line.unwrap();
+        let ara: std::str::SplitWhitespace = dataStr.as_ref().split_whitespace();
+        let f_str = ara.next().unwrap();
+        if(f_str.starts_with("v"))
+        {
+            let mut vec  = Vec::new();
+
+            vec.push(ara.next());
+            vec.push(ara.next());
+            vec.push(ara.next());
+
+            vects.push(vec);
+            
+        }
+        else if(f_str.starts_with("f"))
+        {
+            /*
+            let mut vec = Vec::new();
+
+            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
+            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
+            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
+
+            faces.push(vec);
+            */
+        }
+        */
+    }
+    
+    
 }
