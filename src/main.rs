@@ -12,6 +12,8 @@ use std::io::BufReader;
 use std::io::Read;
 use std::string::String;
 use std::error::Error;
+
+use std::str::FromStr;
 #[derive(Clone, Copy)]
 struct Color(u8, u8, u8);
 
@@ -277,7 +279,7 @@ fn main() {
 //line(&mut img, 141,yMax,360,0,"1".to_string(), Color(0, 0,255),true);
 
     let vects_faces_res = model_create();
-    /*
+    
     let vects_faces = vects_faces_res.unwrap();
     let vects = vects_faces.0;
     let faces = vects_faces.1;
@@ -287,24 +289,25 @@ fn main() {
         let face = &faces[i];
         for j in 0..2
         {
-            let v0 = &vects[face[j]];
-            let v1 = &vects[face[(j+1)%3]];
+            
+            let v0 = &vects[face[j] as usize];
+            let v1 = &vects[face[(j+1)%3] as usize];
 
-            let x0 = ((v0[0] + 1) * (img.width/2) as u32) as i32;
-            let y0 = ((v0[0] + 1) * (img.width/2) as u32) as i32;
-            let x1 = ((v1[0] + 1) * (img.width/2) as u32) as i32;
-            let y1 = ((v1[0] + 1) * (img.width/2) as u32) as i32;
+            let x0 = ((v0[0] + 1.0) * (img.width/2) as f32) as i32;
+            let y0 = ((v0[1] + 1.0) * (img.height/2) as f32) as i32;
+            let x1 = ((v1[0] + 1.0) * (img.width/2) as f32) as i32;
+            let y1 = ((v1[1] + 1.0) * (img.height/2) as f32) as i32;
             line(&mut img,x0,y0,x1,y1,Color(255,255,255))
         }
     }
 
 
     img.write_to_tga("render_1.tga").unwrap();
-    */
+    
 }
-fn model_create(){
-    //let mut vects = Vec::new();
-    //let mut faces = Vec::new();
+fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
+    let mut vects = Vec::new();
+    let mut faces = Vec::new();
     
     let path = std::path::Path::new("C:\\Users\\Administrator\\Documents\\Rust_Projects\\Bres\\target\\debug\\african_head.obj");
     let display = path.display();
@@ -316,38 +319,61 @@ fn model_create(){
     };
     
     let reader = BufReader::new(file);
+    let mut lines = reader.lines();
 
-    for lineResult in reader.lines() {
-        /*
+    for lineResult in lines {
+        
         let work_line = lineResult;
         let mut dataStr = work_line.unwrap();
-        let ara: std::str::SplitWhitespace = dataStr.as_ref().split_whitespace();
-        let f_str = ara.next().unwrap();
-        if(f_str.starts_with("v"))
+
+        
+        let mut dataStr = dataStr.split_whitespace();
+        let mut f_str = dataStr.next().unwrap();
+        if (f_str.starts_with("#"))
         {
-            let mut vec  = Vec::new();
+            let ara = f_str;
+            println!("{}",f_str);
 
-            vec.push(ara.next());
-            vec.push(ara.next());
-            vec.push(ara.next());
-
-            vects.push(vec);
-            
         }
-        else if(f_str.starts_with("f"))
-        {
-            /*
-            let mut vec = Vec::new();
+        else{
+        
+            if(f_str.starts_with("v"))
+            {
+                let mut vec  = Vec::new();
 
-            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
-            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
-            vec.push(dataStr.next().unwrap().parse::<usize>().unwrap());
+                
+                let xstr = dataStr.next().unwrap();
+                let ysrt = dataStr.next().unwrap();
 
-            faces.push(vec);
-            */
+
+                vec.push(f32::from_str(xstr).unwrap());
+                vec.push(f32::from_str(ysrt).unwrap());
+
+
+                vects.push(vec);
+            }
+            else if(f_str.starts_with("f"))
+            {
+                let mut vec = Vec::new();
+
+
+                let xstr = dataStr.next().unwrap();
+                let ysrt = dataStr.next().unwrap();
+
+
+                vec.push(i32::from_str(xstr).unwrap());
+                vec.push(i32::from_str(ysrt).unwrap());
+
+                faces.push(vec);
+                
+            }
         }
-        */
+
+        
     }
+    Ok((vects,faces))
     
-    
+}
+fn parseObjString(str : String){
+
 }
