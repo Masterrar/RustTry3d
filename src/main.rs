@@ -253,8 +253,8 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 }
 */
 fn main() {
-    let xMax = 511;
-    let yMax = 511;
+    let xMax = 1000;
+    let yMax = 1000;
 
     
     
@@ -287,22 +287,22 @@ fn main() {
     for i in 0..faces.len()
     {
         let face = &faces[i];
-        for j in 0..2
+        for j in 0..3
         {
             
             let v0 = &vects[face[j] as usize];
             let v1 = &vects[face[(j+1)%3] as usize];
 
-            let x0 = ((v0[0] + 1.0) * (img.width/2) as f32) as i32;
-            let y0 = ((v0[1] + 1.0) * (img.height/2) as f32) as i32;
-            let x1 = ((v1[0] + 1.0) * (img.width/2) as f32) as i32;
-            let y1 = ((v1[1] + 1.0) * (img.height/2) as f32) as i32;
-            line(&mut img,x0,y0,x1,y1,Color(255,255,255))
+            let x0 = ((v0[0]) * (img.width/2) as f32) as i32;
+            let y0 = ((v0[1]) * (img.height/2) as f32) as i32;
+            let x1 = ((v1[0]) * (img.width/2) as f32) as i32;
+            let y1 = ((v1[1]) * (img.height/2) as f32) as i32;
+            line(&mut img,xMax/2 + x0,yMax/2 + y0,xMax/2 + x1,yMax/2+y1,Color(255,255,255))
         }
     }
 
 
-    img.write_to_tga("render_1.tga").unwrap();
+    img.write_to_tga("render_3.tga").unwrap();
     
 }
 fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
@@ -323,12 +323,24 @@ fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
 
     for lineResult in lines {
         
+        //println!("{}","let work_line = lineResult;");
         let work_line = lineResult;
-        let mut dataStr = work_line.unwrap();
+        //println!("{}","let mut dataStr = work_line.unwrap();");
+        let  dataStr = work_line.unwrap();
+        
+        //println!("{}","let mut dataStr = dataStr.split_whitespace();");
 
         
         let mut dataStr = dataStr.split_whitespace();
-        let mut f_str = dataStr.next().unwrap();
+        
+        //println!("{}","let mut f_str = dataStr.next().unwrap();");
+        let f_strNext = dataStr.next();
+        match f_strNext{
+            None => continue,
+            _ => {}
+        }
+        let f_str = f_strNext.unwrap();
+        //println!("{}","if (f_str.starts_with())");
         if (f_str.starts_with("#"))
         {
             let ara = f_str;
@@ -354,15 +366,21 @@ fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
             }
             else if(f_str.starts_with("f"))
             {
+                let localF: Vec<&str> = dataStr.next().unwrap().split('/').collect();
                 let mut vec = Vec::new();
+                //println!("{}",f_str);
+
+                let str1 = localF[0];
+                //println!("{}",str1);
+                let str2 = localF[1];
+                //println!("{}",str2);
+                let str3 = localF[2];
+                //println!("{}",str3);
 
 
-                let xstr = dataStr.next().unwrap();
-                let ysrt = dataStr.next().unwrap();
-
-
-                vec.push(i32::from_str(xstr).unwrap());
-                vec.push(i32::from_str(ysrt).unwrap());
+                vec.push(i32::from_str(str1).unwrap());
+                vec.push(i32::from_str(str2).unwrap());
+                vec.push(i32::from_str(str3).unwrap());
 
                 faces.push(vec);
                 
