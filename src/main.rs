@@ -1,5 +1,5 @@
 
-
+extern crate image;
 use std::mem;
 use std::slice;
 use std;
@@ -12,8 +12,9 @@ use std::io::BufReader;
 use std::io::Read;
 use std::string::String;
 use std::error::Error;
-
+use std::mem::swap;
 use std::str::FromStr;
+mod wavefront;
 #[derive(Clone, Copy)]
 struct Color(u8, u8, u8);
 
@@ -116,15 +117,14 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
 
     let mut steep = false;
 
-    let delta_X =  abs(x0 - x1);
-    let delta_Y =  abs(y0 - y1);
+    
 
     //println!("2");
 
+    let mut steep = (x0 - x1).abs() < (y0 - y1).abs();
     
     
-    
-    if(delta_X < delta_Y)
+    if(steep)
     {
         mx0 = mx0 + my0;
         my0 = mx0 - my0;
@@ -140,25 +140,30 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
     }
     
     //println!("3");
-    let mut error2 = 0;
-    let deltaerr2 = delta_Y * 2;
-    let mut y = my0;
-    let mut dirY = my1-my0;
+    
     
 
     //println!("4");
-    if dirY > 0{
-        dirY = 1;
-    }
-    if dirY < 0{
-        dirY = -1;
-    }
+    
 //println!("5");
     if(mx0>mx1)
     {
         mx0 = mx0 + mx1;
         mx1 = mx0 - mx1;
         mx0 = mx0 - mx1;
+    }
+    let delta_X =  abs(mx0 - mx1);
+    let delta_Y =  abs(my0 - my1);
+    
+    let mut error2 = 0;
+    let deltaerr2 = delta_Y * 2;
+    let mut y = my0;
+    let mut dirY = my1-my0;
+    if dirY > 0{
+        dirY = 1;
+    }
+    if dirY < 0{
+        dirY = -1;
     }
     let mut nx = 0;
     let mut ny = 0;
@@ -192,7 +197,40 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
     //println!("8");
 }
 
+fn draw_line(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32,
+             buffer: &mut image::RgbImage, color: image::Rgb<u8>) {
 
+    let steep = (x0 - x1).abs() < (y0 - y1).abs();
+
+    if steep {
+        swap(&mut x0, &mut y0);
+        swap(&mut x1, &mut y1);
+    }
+
+    if x0 > x1 {
+        swap(&mut x0, &mut x1);
+        swap(&mut y0, &mut y1);
+    }
+
+    let delta_x = x1 - x0;
+    let delta_y = y1 - y0;
+    let delta_error = (delta_y * 2).abs();
+    let mut y = y0;
+    let mut error = 0;
+
+    for x in x0 ..= x1 {
+        if steep {
+            buffer.put_pixel(y as u32, x as u32, color);
+        } else {
+            buffer.put_pixel(x as u32, y as u32, color);
+        }
+        error += delta_error;
+        if error > delta_x {
+            y += if y1 > y0 { 1 } else { -1 };
+            error -= delta_x * 2;
+        }
+    }
+}
 fn line_reverseX(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, gap : i32 ,numLine : String){
     line_reverse(img,x0 + gap,y0,x1 + gap,y1, numLine);
 }
@@ -257,9 +295,9 @@ fn main() {
     let yMax = 1000;
 
     
-    
+    let mut buffer = image::ImageBuffer::new(xMax + 1, yMax + 1);
 
-    let mut img : Image = Image::new(xMax + 1, yMax + 1);
+    let mut img : Image = Image::new((xMax + 1) as i32, (yMax + 1) as i32);
     
     
 /*
@@ -293,16 +331,52 @@ fn main() {
             let v0 = &vects[face[j] as usize];
             let v1 = &vects[face[(j+1)%3] as usize];
 
-            let x0 = ((v0[0]) * (img.width/2) as f32) as i32;
-            let y0 = ((v0[1]) * (img.height/2) as f32) as i32;
-            let x1 = ((v1[0]) * (img.width/2) as f32) as i32;
-            let y1 = ((v1[1]) * (img.height/2) as f32) as i32;
-            line(&mut img,xMax/2 + x0,yMax/2 + y0,xMax/2 + x1,yMax/2+y1,Color(255,255,255))
+            let x0 = ((v0[0] + 1.0) * (xMax/2) as f32) as i32;
+            let y0 = ((v0[1] + 1.0) * (yMax/2) as f32) as i32;
+            let x1 = ((v1[0] + 1.0) * (xMax/2) as f32) as i32;
+            let y1 = ((v1[1] + 1.0) * (yMax/2) as f32) as i32;
+            line(&mut img,x0,y0, x1,y1,Color(255,255,255));
+            draw_line(x0, y0, x1, y1, &mut buffer, image::Rgb([255, 255, 255]))
+        }
+    }
+    
+
+
+    img.write_to_tga("render_4.tga").unwrap();
+    let ref mut render = File::create("output1.png").unwrap();
+
+    image::ImageRgb8(buffer).flipv()
+                            .save(render, image::PNG)
+                            .unwrap();
+
+
+    let coordinates = wavefront::Object::new("C:\\Users\\Administrator\\Documents\\Rust_Projects\\Bres\\target\\debug\\african_head.obj");
+
+    let mut buffer1 = image::ImageBuffer::new(xMax + 1, yMax + 1);
+    let mut img1 : Image = Image::new((xMax + 1) as i32, (yMax + 1) as i32);
+    for face in coordinates.geometric_faces {
+        for i in 0..3 {
+            let v0 = coordinates.geometric_vertices[(face[i]) as usize];
+            let v1 = coordinates.geometric_vertices[(face[(i+1) % 3]) as usize];
+
+            let x0 = ((v0.x + 1.0) * buffer1.width() as f64 / 2.0).min(buffer1.width() as f64 - 1.0);
+            let y0 = ((v0.y + 1.0) * buffer1.height() as f64 / 2.0).min(buffer1.height() as f64 - 1.0);
+
+            let x1 = ((v1.x + 1.0) * buffer1.width() as f64 / 2.0).min(buffer1.width() as f64 - 1.0);
+            let y1 = ((v1.y + 1.0) * buffer1.height() as f64 / 2.0).min(buffer1.height() as f64 - 1.0);
+            line(&mut img1,x0 as i32,y0 as i32, x1 as i32,y1 as i32,Color(255,255,255));
+            draw_line(x0 as i32, y0 as i32, x1 as i32, y1 as i32,
+                      &mut buffer1, image::Rgb([255, 255, 255]));
         }
     }
 
+    img1.write_to_tga("render_42.tga").unwrap();
+    let ref mut render = File::create("output12.png").unwrap();
 
-    img.write_to_tga("render_3.tga").unwrap();
+    image::ImageRgb8(buffer1).flipv()
+                            .save(render, image::PNG)
+                            .unwrap();
+
     
 }
 fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
