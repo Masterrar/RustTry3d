@@ -126,37 +126,21 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
     
     if(steep)
     {
-        mx0 = mx0 + my0;
-        my0 = mx0 - my0;
-        mx0 = mx0 - my0;
-
-        my1 = my1 + mx1;
-        mx1 = my1 - mx1;
-        my1 = my1 - mx1;
-
-        steep = true;
+        swap(&mut mx0, &mut my0);
+        swap(&mut mx1, &mut my1);
         
-
     }
-    
-    //println!("3");
-    
-    
 
-    //println!("4");
-    
-//println!("5");
     if(mx0>mx1)
     {
-        mx0 = mx0 + mx1;
-        mx1 = mx0 - mx1;
-        mx0 = mx0 - mx1;
+        swap(&mut mx0, &mut mx1);
+        swap(&mut my0, &mut my1);
     }
     let delta_X =  abs(mx0 - mx1);
     let delta_Y =  abs(my0 - my1);
     
     let mut error2 = 0;
-    let deltaerr2 = delta_Y * 2;
+    let deltaerr2 = (delta_Y * 2).abs();
     let mut y = my0;
     let mut dirY = my1-my0;
     if dirY > 0{
@@ -165,17 +149,9 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
     if dirY < 0{
         dirY = -1;
     }
-    let mut nx = 0;
-    let mut ny = 0;
-    for mut x in mx0..mx1{
+    
+    for x in mx0..=mx1{
         
-
-
-//let  t = (((nx-x0) as f32)/((x1-x0) as f32)) as f32;       
-//let y = (((y0 as f32*(1.-t)) as i32) + ((y1) as f32*t) as i32) as i32;
-        
-        
-        //println!("{}:{}"  ,x.to_string(),y.to_string());
         if(steep == false)
         {
             plot(img,x,y,color);
@@ -191,10 +167,10 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
             y = y + dirY;
             error2 = error2 - 2 *delta_X;
         }
-        //println!("7");
+
 
     }
-    //println!("8");
+
 }
 
 fn draw_line(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32,
@@ -342,12 +318,7 @@ fn main() {
     
 
 
-    img.write_to_tga("render_4.tga").unwrap();
-    let ref mut render = File::create("output1.png").unwrap();
-
-    image::ImageRgb8(buffer).flipv()
-                            .save(render, image::PNG)
-                            .unwrap();
+    
 
 
     let coordinates = wavefront::Object::new("C:\\Users\\Administrator\\Documents\\Rust_Projects\\Bres\\target\\debug\\african_head.obj");
@@ -369,8 +340,13 @@ fn main() {
                       &mut buffer1, image::Rgb([255, 255, 255]));
         }
     }
+    img.write_to_tga("render_1.tga").unwrap();
+    let ref mut render = File::create("output1.png").unwrap();
 
-    img1.write_to_tga("render_42.tga").unwrap();
+    image::ImageRgb8(buffer).flipv()
+                            .save(render, image::PNG)
+                            .unwrap();
+    img1.write_to_tga("render_12.tga").unwrap();
     let ref mut render = File::create("output12.png").unwrap();
 
     image::ImageRgb8(buffer1).flipv()
