@@ -136,8 +136,8 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
         swap(&mut mx0, &mut mx1);
         swap(&mut my0, &mut my1);
     }
-    let delta_X =  abs(mx0 - mx1);
-    let delta_Y =  abs(my0 - my1);
+    let delta_X =  mx1-mx0;
+    let delta_Y =  my1-my0;
     
     let mut error2 = 0;
     let deltaerr2 = (delta_Y * 2).abs();
@@ -152,12 +152,12 @@ fn line(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32,  color : Color
     
     for x in mx0..=mx1{
         
-        if(steep == false)
+        if(steep)
         {
-            plot(img,x,y,color);
+            img.set_pixel(y,x,color);
         }
         else{
-            plot(img,y,x,color);
+            img.set_pixel(x,y,color);
         }
 
         error2 = error2 + deltaerr2;
@@ -207,65 +207,7 @@ fn draw_line(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32,
         }
     }
 }
-fn line_reverseX(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, gap : i32 ,numLine : String){
-    line_reverse(img,x0 + gap,y0,x1 + gap,y1, numLine);
-}
-fn line_reverseY(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, gap : i32 , numLine : String){
-    line_reverse(img,x0 ,y0 + gap ,x1 ,y1 + gap, numLine);
-}
-fn line_reverse(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine : String){
-     
-    //line(img,x1 ,y1,x0 ,y0, numLine , Color(0,0,255));
-}
 
-fn logLine(img : &mut Image, x0 : i32, y0 : i32, x1 : i32, y1 : i32, numLine :String){
-    println!("---------------------{} x({}, {}) y({}, {})---------------------", numLine,x0,y0,x1,y1);
-}
-
-fn plot(img : &mut Image, x : i32 , y : i32, color : Color ){
-        //let r = ((x ^ y) % 256) as u8;
-        //let g = ((x + y) % 256) as u8;
-        //let b = ((y.wrapping_sub(x)) % 256) as u8;
-        let r = 0 as u8;
-        let g = 0 as u8;
-        let b = 255 as u8;
-        //println!("|{}|{}|{}|",r,g,b);
-        
-        img.set_pixel(x,y, color);
-}
-
-
-fn LineTest(img : &mut Image, x0 : i32, y0 : i32, gapX : i32 ,gapY : i32,numLine : String, color: Color,log : bool)
-{
-    
-    let xMax = img.width;
-    let yMax = img.height;
-
-    let mut x1 = xMax - x0;
-    let mut y1 = yMax - y0;
-    
-    //line(img,x0,y0,x1,y1,numLine, color , log);
-    if(x1 + gapX > xMax)
-    {
-        x1 = xMax - gapX;
-    }
-    if(y1 + gapY > yMax)
-    {
-        y1 = yMax - gapY;
-    }
-
-    //line(img,x1 + gapX,y1 + gapY,x0 + gapX,y0 + gapY,"reverse".to_string(), color , log);
-}
-
-/*
-void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
-    for (float t=0.; t<1.; t+=.01) {
-        int x = x0*(1.-t) + x1*t;
-        int y = y0*(1.-t) + y1*t;
-        image.set(x, y, color);
-    }
-}
-*/
 fn main() {
     let xMax = 1000;
     let yMax = 1000;
@@ -275,22 +217,6 @@ fn main() {
 
     let mut img : Image = Image::new((xMax + 1) as i32, (yMax + 1) as i32);
     
-    
-/*
-    LineTest(&mut img,0         ,yMax               ,gap,0  ,"1".to_string(), Color(0, 255,255),true);
-    LineTest(&mut img,0         ,0                  ,gap,0  ,"2".to_string(), Color(255, 255,255),true);
-
-    LineTest(&mut img,x025 + gap,yMax               ,0  ,0  ,"3".to_string(), Color(0, 255,0),true);//Lime
-    LineTest(&mut img,x025 + gap,0                  ,0  ,0  ,"4".to_string(), Color(0, 0,255),true);//Red
-
-    LineTest(&mut img,0         ,y05 + y025 - gap   ,0  ,gap,"5".to_string(), Color(255, 255,0),false);
-    LineTest(&mut img,0         ,y05 - y025 + gap   ,0  ,gap,"6".to_string(), Color(255, 0,0),false);
-    
-    LineTest(&mut img,x05       ,yMax               ,gap,0  ,"7".to_string(), Color(255, 0,255),false);
-    LineTest(&mut img,0         ,y05                ,0  ,gap,"8".to_string(), Color(0, 128,128),false);
-    */
-
-//line(&mut img, 141,yMax,360,0,"1".to_string(), Color(0, 0,255),true);
 
     let vects_faces_res = model_create();
     
@@ -307,10 +233,10 @@ fn main() {
             let v0 = &vects[face[j] as usize];
             let v1 = &vects[face[(j+1)%3] as usize];
 
-            let x0 = ((v0[0] + 1.0) * (xMax/2) as f32) as i32;
-            let y0 = ((v0[1] + 1.0) * (yMax/2) as f32) as i32;
-            let x1 = ((v1[0] + 1.0) * (xMax/2) as f32) as i32;
-            let y1 = ((v1[1] + 1.0) * (yMax/2) as f32) as i32;
+            let x0 = ((v0[0] as f64 + 1.0) * (xMax as f64/2.0)) as i32;
+            let y0 = ((v0[1] as f64 + 1.0) * (yMax as f64/2.0)) as i32;
+            let x1 = ((v1[0] as f64 + 1.0) * (xMax as f64/2.0)) as i32;
+            let y1 = ((v1[1] as f64 + 1.0) * (yMax as f64/2.0)) as i32;
             line(&mut img,x0,y0, x1,y1,Color(255,255,255));
             draw_line(x0, y0, x1, y1, &mut buffer, image::Rgb([255, 255, 255]))
         }
@@ -340,14 +266,14 @@ fn main() {
                       &mut buffer1, image::Rgb([255, 255, 255]));
         }
     }
-    img.write_to_tga("render_1.tga").unwrap();
-    let ref mut render = File::create("output1.png").unwrap();
+    img.write_to_tga("render_211.tga").unwrap();
+    let ref mut render = File::create("output21.png").unwrap();
 
     image::ImageRgb8(buffer).flipv()
                             .save(render, image::PNG)
                             .unwrap();
-    img1.write_to_tga("render_12.tga").unwrap();
-    let ref mut render = File::create("output12.png").unwrap();
+    img1.write_to_tga("render_221.tga").unwrap();
+    let ref mut render = File::create("output221.png").unwrap();
 
     image::ImageRgb8(buffer1).flipv()
                             .save(render, image::PNG)
@@ -416,21 +342,18 @@ fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
             }
             else if(f_str.starts_with("f"))
             {
-                let localF: Vec<&str> = dataStr.next().unwrap().split('/').collect();
                 let mut vec = Vec::new();
-                //println!("{}",f_str);
-
-                let str1 = localF[0];
-                //println!("{}",str1);
-                let str2 = localF[1];
-                //println!("{}",str2);
-                let str3 = localF[2];
-                //println!("{}",str3);
-
-
-                vec.push(i32::from_str(str1).unwrap());
-                vec.push(i32::from_str(str2).unwrap());
-                vec.push(i32::from_str(str3).unwrap());
+                
+                
+                    // Один из наборов, состоящих из 3 номеров
+                    // Пример: f |3/3/3| 3/3/3 3/3/3 , где между |...| - один из кусков
+                    let part1 : Vec<&str> = dataStr.next().unwrap().split('/').collect();
+                    let part2 : Vec<&str> = dataStr.next().unwrap().split('/').collect();
+                    let part3 : Vec<&str> = dataStr.next().unwrap().split('/').collect();
+                    vec.push(i32::from_str(part1[0]).unwrap());
+                    vec.push(i32::from_str(part2[0]).unwrap());
+                    vec.push(i32::from_str(part3[0]).unwrap());
+                
 
                 faces.push(vec);
                 
