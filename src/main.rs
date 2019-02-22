@@ -223,7 +223,7 @@ fn main() {
     let vects_faces = vects_faces_res.unwrap();
     let vects = vects_faces.0;
     let faces = vects_faces.1;
-
+// Падает тут, т.к faces.len > vects.len => во время перебора выход за размер массива
     for i in 0..faces.len()
     {
         let face = &faces[i];
@@ -266,14 +266,14 @@ fn main() {
                       &mut buffer1, image::Rgb([255, 255, 255]));
         }
     }
-    img.write_to_tga("render_211.tga").unwrap();
-    let ref mut render = File::create("output21.png").unwrap();
+    img.write_to_tga("render_211111.tga").unwrap();
+    let ref mut render = File::create("output211111.png").unwrap();
 
     image::ImageRgb8(buffer).flipv()
                             .save(render, image::PNG)
                             .unwrap();
-    img1.write_to_tga("render_221.tga").unwrap();
-    let ref mut render = File::create("output221.png").unwrap();
+    img1.write_to_tga("render_221111.tga").unwrap();
+    let ref mut render = File::create("output221111.png").unwrap();
 
     image::ImageRgb8(buffer1).flipv()
                             .save(render, image::PNG)
@@ -301,32 +301,35 @@ fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
         
         //println!("{}","let work_line = lineResult;");
         let work_line = lineResult;
+        
         //println!("{}","let mut dataStr = work_line.unwrap();");
-        let  dataStr = work_line.unwrap();
+        let  dataStr = match work_line{
+            Ok(line) => line,
+            Error => continue
+            
+        };
         
         //println!("{}","let mut dataStr = dataStr.split_whitespace();");
 
         
-        let mut dataStr = dataStr.split_whitespace();
         
-        //println!("{}","let mut f_str = dataStr.next().unwrap();");
-        let f_strNext = dataStr.next();
-        match f_strNext{
-            None => continue,
-            _ => {}
-        }
-        let f_str = f_strNext.unwrap();
+        
+        
         //println!("{}","if (f_str.starts_with())");
-        if (f_str.starts_with("#"))
+        if (dataStr.starts_with("#"))
         {
-            let ara = f_str;
-            println!("{}",f_str);
+            let ara = dataStr;
+            println!("{}",ara);
 
         }
         else{
         
-            if(f_str.starts_with("v"))
+            if(dataStr.starts_with("v "))
             {
+                let mut dataStr = dataStr.split_whitespace();
+        
+                
+                dataStr.next();
                 let mut vec  = Vec::new();
 
                 
@@ -340,8 +343,10 @@ fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
 
                 vects.push(vec);
             }
-            else if(f_str.starts_with("f"))
+            else if(dataStr.starts_with("f "))
             {
+                let mut dataStr = dataStr.split_whitespace();
+                dataStr.next();
                 let mut vec = Vec::new();
                 
                 
