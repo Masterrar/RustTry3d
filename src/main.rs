@@ -230,8 +230,8 @@ fn main() {
         for j in 0..3
         {
             
-            let v0 = &vects[face[j] as usize];
-            let v1 = &vects[face[(j+1)%3] as usize];
+            let v0 = &vects[(face[j] - 1) as usize];
+            let v1 = &vects[(face[(j+1)%3] - 1) as usize];
 
             let x0 = ((v0[0] as f64 + 1.0) * (xMax as f64/2.0)) as i32;
             let y0 = ((v0[1] as f64 + 1.0) * (yMax as f64/2.0)) as i32;
@@ -266,19 +266,20 @@ fn main() {
                       &mut buffer1, image::Rgb([255, 255, 255]));
         }
     }
-    img.write_to_tga("render_211111.tga").unwrap();
-    let ref mut render = File::create("output211111.png").unwrap();
+    img.write_to_tga("render_1.tga").unwrap();
+    let ref mut render = File::create("output1.png").unwrap();
 
     image::ImageRgb8(buffer).flipv()
                             .save(render, image::PNG)
                             .unwrap();
-    img1.write_to_tga("render_221111.tga").unwrap();
-    let ref mut render = File::create("output221111.png").unwrap();
+                            /*
+    img1.write_to_tga("render_2.tga").unwrap();
+    let ref mut render = File::create("output2.png").unwrap();
 
     image::ImageRgb8(buffer1).flipv()
                             .save(render, image::PNG)
                             .unwrap();
-
+*/
     
 }
 fn model_create()-> std::io::Result<(Vec<Vec<f32>>,Vec<Vec<i32>>)>{
