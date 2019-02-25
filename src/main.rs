@@ -1,3 +1,9 @@
+// Код написан по мотивам статьи: 
+// https://habr.com/ru/post/248153/
+
+// Снимок репозитория: 
+// https://github.com/ssloy/tinyrenderer/tree/f6fecb7ad493264ecd15e230411bfb1cca539a12
+
 use std;
 use std::fs::File;
 use std::io::prelude::*;
