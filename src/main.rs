@@ -23,10 +23,8 @@ use TGAWriter::Color;
 fn main() {
     let xMax = 1000;
     let yMax = 1000;
-    let xMax = 1000;
-    let yMax = 1000;
-asdfasdfфывафыва
-фывафыва
+    
+    
     let mut img : Image = Image::new((xMax + 1) as i32, (yMax + 1) as i32);
     
 
